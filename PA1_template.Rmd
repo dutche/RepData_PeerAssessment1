@@ -7,19 +7,56 @@ output:
 
 
 ## Loading and preprocessing the data
+```{r, echo = TRUE}
+activity <- read.csv(file = unz("activity.zip", "activity.csv"), header = TRUE, sep = ",", quote = "\"")
+head(activity)
+```
 
 
 
 ## What is mean total number of steps taken per day?
+```{r, echo = TRUE}
+steps <- tapply(activity$steps, activity$date, sum)
+hist(steps)
+abline(v = mean(steps, na.rm = TRUE), col = "blue", lwd = 2)
+abline(v = median(steps, na.rm = TRUE), col = "green", lwd = 2)
+```
 
 
 
 ## What is the average daily activity pattern?
-
+```{r, echo = TRUE}
+activity2 <- subset(activity, !is.na(activity$steps))
+steps_interval <- tapply(activity2$steps, activity2$interval, mean)
+plot(unique(activity2$interval), steps_interval, type="l", ylab = "Average number of steps", xlab = "5 min intervals", main= "Average daily activity pattern")
+abline(v = 835, col = "blue", lwd = 2)
+```
+The interval number 104 (containing the 835th minute) is the one contaning the maximum number of steps.
 
 
 ## Imputing missing values
+```{r, echo = TRUE}
+missing_values <- subset(activity, is.na(steps))
+nrow(missing_values)
 
+activity2 <- activity
+activity2$steps[is.na(activity2$steps)] <- steps_interval[activity2$interval/5]
 
+steps <- tapply(activity2$steps, activity2$date, sum)
+hist(steps)
+abline(v = mean(steps, na.rm = TRUE), col = "blue", lwd = 2)
+abline(v = median(steps, na.rm = TRUE), col = "green", lwd = 2)
+```
+There are 2304 missing values.
+We fill them with the mean of that 5-minute interval.     
+The values we get does not differ from those of the first part of the assignment.     
+There is no impact on the estimates of the total daily number of steps.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r, echo = TRUE}
+activity2$weekend <- weekdays(as.Date(activity2$date))
+activity2$weekend[activity2$weekend %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")] <- "weekday"
+activity2$weekend[activity2$weekend %in% c("Saturday", "Sunday")] <- "weekend"
+activity2$weekend <- as.factor(activity2$weekend)
+```
+
